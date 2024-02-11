@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\AP1\V1\Main;
 
+use App\Http\Controllers\AP1\V1\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
+use App\Http\Resources\UserResource;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -29,19 +34,23 @@ class UserController extends Controller
     }
     public function store(UserStoreRequest $userStoreRequest)
     {
-        dd($userStoreRequest->validated());
-        //
+        $seed = $userStoreRequest->validated();
+        $user_id = User::query()->insertGetId($seed);
+        return new UserResource(User::query()->findOrFail($user_id));
     }
 
     /**
      * Display the specified resource.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($lang,$id)
     {
-        //
+        $user = User::query()->find($id);
+        if (!$user){
+            return response()->json(['message' => trans('main.User not found')], 404);
+        }
+        return new UserResource($user);
     }
 
     /**
@@ -62,9 +71,12 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UserUpdateRequest $userUpdateRequest, $id)
     {
-        //
+        $update = $userUpdateRequest->validated();
+        User::query()->update($update);
+        return response()->json(['message' => trans('main.Update Success')], 200);
+
     }
 
     /**

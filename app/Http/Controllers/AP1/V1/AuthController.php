@@ -4,8 +4,9 @@ namespace App\Http\Controllers\AP1\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
     public function __construct()
     {
@@ -17,7 +18,7 @@ class AuthController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login()
+    public function login($lang)
     {
         $credentials = request(['email', 'password']);
         if (! $token = auth()->attempt($credentials)) {
