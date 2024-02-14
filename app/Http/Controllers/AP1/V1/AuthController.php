@@ -21,7 +21,7 @@ class AuthController extends BaseController
     public function login($lang)
     {
         $credentials = request(['email', 'password']);
-        if (! $token = auth()->attempt($credentials)) {
+        if (! $token = auth('api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
         return $this->respondWithToken($token);
