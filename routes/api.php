@@ -34,7 +34,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1/{lang}', 'where' => ['lang'
 
     Route::prefix('reddit')->group(function () {
         Route::controller(RedditAuthController::class)->group(function () {
-            Route::post('login', 'login');
+//            Route::post('index', 'index');
         });
     });
 
