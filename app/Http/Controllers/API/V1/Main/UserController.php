@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\AP1\V1\Main;
+namespace App\Http\Controllers\API\V1\Main;
 
-use App\Http\Controllers\AP1\V1\BaseController;
+use App\Http\Controllers\API\V1\BaseController;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;

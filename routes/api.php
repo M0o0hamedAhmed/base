@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\AP1\V1\AuthController;
-use App\Http\Controllers\AP1\V1\Main\UserController;
+use App\Http\Controllers\API\V1\AuthController;
+use App\Http\Controllers\API\V1\firbase\FirebaseController;
+use App\Http\Controllers\API\V1\Main\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,8 +26,16 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1/{lang}', 'where' => ['lang'
     Route::post('login', [AuthController::class, 'login']);
 
 
+    Route::apiResources([
+        'firebase' => FirebaseController::class,
+    ]);
 
+    Route::prefix('firebase')->group(function (){
 
+    Route::controller(FirebaseController::class)->group(function () {
+        Route::post('login', 'login');
+    });
+    });
 
     // must authentication
     Route::group(['middleware' => ['auth']], function ($router) {
@@ -42,6 +51,7 @@ Route::group(['middleware' => 'api', 'prefix' => 'v1/{lang}', 'where' => ['lang'
 
         Route::apiResources([
             'user' => UserController::class,
+//            'firebase' => FirebaseController::class,
         ]);
 
     });
