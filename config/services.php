@@ -29,5 +29,11 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'reddit' => [
+        'password' => env('REDDIT_USERNAME'),
+        'username' =>  env('REDDIT_PASSWORD'),
+        'secret' => env('REDDIT_SECRET'),
+        'client_id' => env('REDDIT_CLIENT_ID'),
+    ]
 
 ];

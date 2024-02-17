@@ -10,69 +10,75 @@ use Kreait\Firebase\Factory;
 
 class RedditAuthController extends Controller
 {
-    public function index(){
-        $this->store_in_firebase();
-        $firebase = (new Factory)
+    private $firebase;
+
+    public function __construct()
+    {
+        $this->firebase = (new Factory)
             ->withServiceAccount(base_path('/firebase_credentials.json'))
             ->withDatabaseUri('https://reddit-d1b99-default-rtdb.firebaseio.com');
-
-        $database = $firebase->createDatabase();
-        $data['new'] =  $database->getReference('new')->getValue();
-        $data['hot'] =  $database->getReference('hot')->getValue();
-        $data['rising'] =  $database->getReference('rising')->getValue();
-       return response()->json($data);
     }
-    private function get_token()
+
+    public function index()
     {
-        if (!Cache::has('access_token')) {
-            $response = Http::withBasicAuth('9ldpvBz9yKDZ9TIm9mcVPA', 'PP5aGVQ8mIysFOamsh2zmvpXAV7S0Q')
-                ->asForm()
-                ->post('https://www.reddit.com/api/v1/access_token',
-                    [
-                        'grant_type' => 'password',
-                        'username' => 'Quirky_Till_2969',
-                        'password' => 'M0o0hamedAhmed',
-                    ]);
-            $token = $response['access_token'];
-            Cache::put('access_token', $response['access_token'], 15);
-        } else {
-            $token = Cache::get('access_token');
-        }
-        return $token;
+        $this->storeInFirebase();
+        $data['new'] = $this->getDataFromFirebase('new');
+        $data['hot'] = $this->getDataFromFirebase('hot');
+        $data['rising'] = $this->getDataFromFirebase('rising');
+
+        return response()->json($data);
     }
 
-    private function store_in_firebase()
+    private function getAccessToken()
+    {
+        return Cache::remember('access_token', 86400, function () {
+            $response = Http::withBasicAuth(config('services.reddit.client_id'), config('services.reddit.secret'))
+                ->asForm()
+                ->post('https://www.reddit.com/api/v1/access_token', [
+                    'grant_type' => 'password',
+                    'username' => config('services.reddit.username'),
+                    'password' => config('services.reddit.password'),
+                ]);
+
+            return $response['access_token'];
+        });
+    }
+
+    private function getDataFromReddit($type, $limit = 100)
+    {
+        $token = $this->getAccessToken();
+
+        $result = Http::withHeaders([
+            "Authorization" => "Bearer $token",
+            "User-Agent" => "ChangeMeClient/0.1 by M0o0hamedAhmed"
+        ])->get("https://oauth.reddit.com/r/FlutterDev/$type", [
+            'limit' => $limit,
+        ]);
+
+        return $result->json();
+    }
+
+    private function storeInFirebase()
     {
         $types = ['new', 'hot', 'rising'];
         $limit = 100;
 
         foreach ($types as $type) {
-            $result = $this->get_data($type, $limit);
+            $result = $this->getDataFromReddit($type, $limit);
             $data = $result['data']['children'];
-            $this->store($data, $type);
+            $this->storeDataInFirebase($data, $type);
         }
-
     }
 
-    private function store(array $data, string $reference): void
+    private function storeDataInFirebase(array $data, string $reference): void
     {
-        $firebase = (new Factory)
-            ->withServiceAccount(base_path('/firebase_credentials.json'))
-            ->withDatabaseUri('https://reddit-d1b99-default-rtdb.firebaseio.com');
-
-        $database = $firebase->createDatabase();
-        $blog = $database->getReference($reference)->set($data);
+        $database = $this->firebase->createDatabase();
+        $database->getReference($reference)->set($data);
     }
 
-    private function get_data($type, int $limit)
+    private function getDataFromFirebase(string $reference)
     {
-        $token = $this->get_token();
-        $result = Http::withHeaders([
-            "Authorization" => "bearer " . $token,
-            "User-Agent" => "ChangeMeClient/0.1 by M0o0hamedAhmed"
-        ])->get('https://oauth.reddit.com/r/FlutterDev/' . $type, [
-            'limit' => $limit ?? 100
-        ]);
-        return $result;
+        $database = $this->firebase->createDatabase();
+        return $database->getReference($reference)->getValue();
     }
 }
